@@ -62,7 +62,7 @@ set(THIS_PACKAGE_INCLUDE_DIRS
     backtrace/include
     collision_detection/include
     collision_detection_fcl/include
-    ${BULLET_INC}
+    collision_detection_bullet/include
     constraint_samplers/include
     controller_manager/include
     distance_field/include
@@ -96,7 +96,7 @@ set(THIS_PACKAGE_LIBRARIES
     moveit_planning_interface
     moveit_collision_detection
     moveit_collision_detection_fcl
-    ${BULLET_LIB}
+    moveit_collision_detection_bullet
     moveit_kinematic_constraints
     moveit_planning_scene
     moveit_constraint_samplers
@@ -131,9 +131,10 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   eigen3_cmake_module
   Boost
   OCTOMAP
-  ${BULLET_ENABLE}
+  ${BULLET_INCLUDE_DIRS}
 )
 pluginlib_export_plugin_description_file(moveit_core collision_detector_fcl_description.xml)
+pluginlib_export_plugin_description_file(moveit_core collision_detector_bullet_description.xml)
 
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS}
   ${LIBFCL_INCLUDE_DIRS}
@@ -166,6 +167,7 @@ add_subdirectory(kinematics_base)
 add_subdirectory(transforms)
 add_subdirectory(robot_state)
 add_subdirectory(collision_detection_fcl)
+add_subdirectory(collision_detection_bullet)
 add_subdirectory(robot_trajectory)
 add_subdirectory(kinematic_constraints)
 add_subdirectory(trajectory_processing)
@@ -179,12 +181,6 @@ add_subdirectory(distance_field)
 add_subdirectory(collision_distance_field)
 add_subdirectory(kinematics_metrics)
 add_subdirectory(dynamics_solver)
-# TODO(henningkayser): enable bullet once the library is migrated to ROS2
-if(BULLET_ENABLE)
-add_subdirectory(collision_detection_bullet)
-else()
-install(FILES collision_detection_bullet/empty_description.xml DESTINATION share/${PROJECT_NAME} RENAME collision_detector_bullet_description.xml)
-endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(${THIS_PACKAGE_LIBRARIES})
