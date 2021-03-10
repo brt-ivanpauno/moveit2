@@ -40,7 +40,7 @@ target_link_libraries(collision_detector_bullet_plugin PUBLIC
   moveit_planning_scene
 )
 
-install(TARGETS ${MOVEIT_LIB_NAME} collision_detector_bullet_plugin 
+install(TARGETS ${MOVEIT_LIB_NAME} collision_detector_bullet_plugin
   EXPORT ${MOVEIT_LIB_NAME}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

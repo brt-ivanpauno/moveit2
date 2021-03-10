@@ -41,6 +41,7 @@
 #include <moveit/moveit_cpp/moveit_cpp.h>
 #include <moveit/moveit_cpp/planning_component.h>
 #include <moveit/robot_state/conversions.h>
+#include <moveit/collision_detection_bullet/collision_detector_allocator_bullet.h>
 #include <moveit_msgs/msg/display_robot_state.hpp>
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 
@@ -89,6 +90,7 @@ public:
     // Add object to planning scene
     {  // Lock PlanningScene
       planning_scene_monitor::LockedPlanningSceneRW scene(moveit_cpp_->getPlanningSceneMonitor());
+      scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create());
       scene->processCollisionObjectMsg(collision_object);
     }  // Unlock PlanningScene
 
