@@ -196,6 +196,7 @@ void TrajectoryExecutionManager::initialize()
   controller_mgr_node_->get_parameter("trajectory_execution.allowed_goal_duration_margin",
                                       allowed_goal_duration_margin_);
   controller_mgr_node_->get_parameter("trajectory_execution.allowed_start_tolerance", allowed_start_tolerance_);
+  RCLCPP_INFO_STREAM(LOGGER, "allowed_start_tolerance_: " << allowed_start_tolerance_);
 
   if (manage_controllers_)
     RCLCPP_INFO(LOGGER, "Trajectory execution is managing controllers");
