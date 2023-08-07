@@ -89,52 +89,8 @@ bool FollowJointTrajectoryControllerHandle::sendTrajectory(const moveit_msgs::ms
   return true;
 }
 
-// TODO(JafarAbdi): Revise parameter lookup
-// void FollowJointTrajectoryControllerHandle::configure(XmlRpc::XmlRpcValue& config)
-//{
-//  if (config.hasMember("path_tolerance"))
-//    configure(config["path_tolerance"], "path_tolerance", goal_template_.path_tolerance);
-//  if (config.hasMember("goal_tolerance"))
-//    configure(config["goal_tolerance"], "goal_tolerance", goal_template_.goal_tolerance);
-//  if (config.hasMember("goal_time_tolerance"))
-//    goal_template_.goal_time_tolerance = ros::Duration(parseDouble(config["goal_time_tolerance"]));
-//}
-
 namespace
 {
-enum ToleranceVariables
-{
-  POSITION,
-  VELOCITY,
-  ACCELERATION
-};
-template <ToleranceVariables>
-double& variable(control_msgs::msg::JointTolerance& msg);
-
-template <>
-inline double& variable<POSITION>(control_msgs::msg::JointTolerance& msg)
-{
-  return msg.position;
-}
-template <>
-inline double& variable<VELOCITY>(control_msgs::msg::JointTolerance& msg)
-{
-  return msg.velocity;
-}
-template <>
-inline double& variable<ACCELERATION>(control_msgs::msg::JointTolerance& msg)
-{
-  return msg.acceleration;
-}
-
-static std::map<ToleranceVariables, std::string> VAR_NAME = { { POSITION, "position" },
-                                                              { VELOCITY, "velocity" },
-                                                              { ACCELERATION, "acceleration" } };
-static std::map<ToleranceVariables, decltype(&variable<POSITION>)> VAR_ACCESS = { { POSITION, &variable<POSITION> },
-                                                                                  { VELOCITY, &variable<VELOCITY> },
-                                                                                  { ACCELERATION,
-                                                                                    &variable<ACCELERATION> } };
-
 const char* errorCodeToMessage(int error_code)
 {
   switch (error_code)
@@ -157,62 +113,75 @@ const char* errorCodeToMessage(int error_code)
 }
 }  // namespace
 
-// TODO(JafarAbdi): Revise parameter lookup
-// void FollowJointTrajectoryControllerHandle::configure(XmlRpc::XmlRpcValue& config, const std::string& config_name,
-//                                                      std::vector<control_msgs::JointTolerance>& tolerances)
-//{
-//  if (isStruct(config))  // config should be either a struct of position, velocity, acceleration
-//  {
-//    for (ToleranceVariables var : { POSITION, VELOCITY, ACCELERATION })
-//    {
-//      if (!config.hasMember(VAR_NAME[var]))
-//        continue;
-//      XmlRpc::XmlRpcValue values = config[VAR_NAME[var]];
-//      if (isArray(values, joints_.size()))
-//      {
-//        size_t i = 0;
-//        for (const auto& joint_name : joints_)
-//          VAR_ACCESS[var](getTolerance(tolerances, joint_name)) = parseDouble(values[i++]);
-//      }
-//      else
-//      {  // use common value for all joints
-//        double value = parseDouble(values);
-//        for (const auto& joint_name : joints_)
-//          VAR_ACCESS[var](getTolerance(tolerances, joint_name)) = value;
-//      }
-//    }
-//  }
-//  else if (isArray(config))  // or an array of JointTolerance msgs
-//  {
-//    for (int i = 0; i < config.size(); ++i)  // NOLINT(modernize-loop-convert)
-//    {
-//      control_msgs::JointTolerance& tol = getTolerance(tolerances, config[i]["name"]);
-//      for (ToleranceVariables var : { POSITION, VELOCITY, ACCELERATION })
-//      {
-//        if (!config[i].hasMember(VAR_NAME[var]))
-//          continue;
-//        VAR_ACCESS[var](tol) = parseDouble(config[i][VAR_NAME[var]]);
-//      }
-//    }
-//  }
-//  else
-//    ROS_WARN_STREAM_NAMED(LOGNAME, "Invalid " << config_name);
-//}
 
-control_msgs::msg::JointTolerance&
-FollowJointTrajectoryControllerHandle::getTolerance(std::vector<control_msgs::msg::JointTolerance>& tolerances,
-                                                    const std::string& name)
+std::vector<control_msgs::msg::JointTolerance>
+FollowJointTrajectoryControllerHandle::configure_tolerance_from_params(
+  const std::string & parameter_prefix)
 {
-  auto it = std::lower_bound(tolerances.begin(), tolerances.end(), name,
-                             [](const control_msgs::msg::JointTolerance& lhs, const std::string& rhs) {
-                               return lhs.name < rhs;
-                             });
-  if (it == tolerances.cend() || it->name != name)
-  {  // insert new entry if not yet available
-    it = tolerances.insert(it, control_msgs::msg::JointTolerance());
-    it->name = name;
+  std::vector<control_msgs::msg::JointTolerance> tolerances;
+  auto positions = node_->declare_parameter<std::vector<double>>(
+    parameter_prefix + ".position",
+    std::vector<double>{});
+  if (positions.size() != 0 && positions.size() != joints_.size()) {
+    RCLCPP_WARN_STREAM(
+      LOGGER,
+      "Parameter '" << parameter_prefix << ".position' should have one value for each joint."
+      " Number of joints " << joints_.size());
   }
-  return *it;
+  auto velocities = node_->declare_parameter<std::vector<double>>(
+    parameter_prefix + ".velocity",
+    std::vector<double>{});
+  if (velocities.size() != 0 && velocities.size() != joints_.size()) {
+    RCLCPP_WARN_STREAM(
+      LOGGER,
+      "Parameter '" << parameter_prefix << ".velocity' should have one value for each joint."
+      " Number of joints " << joints_.size());
+  }
+  auto accelerations = node_->declare_parameter<std::vector<double>>(
+    parameter_prefix + ".acceleration",
+    std::vector<double>{});
+  if (accelerations.size() != 0 && accelerations.size() != joints_.size()) {
+    RCLCPP_WARN_STREAM(
+      LOGGER,
+      "Parameter '" << parameter_prefix << ".acceleration' should have one value for each joint."
+      " Number of joints " << joints_.size());
+  }
+  if (positions.size() == 0 && velocities.size() == 0 && accelerations.size() == 0) {
+    // nothing specified, default tolerances
+    return tolerances;
+  }
+  size_t i = 0;
+  bool use_position_tol = positions.size() == joints_.size();
+  bool use_velocity_tol = positions.size() == joints_.size();
+  bool use_acc_tol = positions.size() == joints_.size();
+  for (const auto & joint : joints_) {
+    control_msgs::msg::JointTolerance tol;
+    tol.name = joint;
+    tolerances.emplace_back(tol);
+    if (use_position_tol) {
+      tol.position = positions[i];
+    }
+    if (use_velocity_tol) {
+      tol.velocity = velocities[i];
+    }
+    if (use_acc_tol) {
+      tol.acceleration = accelerations[i];
+    }
+    ++i;
+  }
+  return tolerances;
+}
+
+FollowJointTrajectoryControllerHandle::FollowJointTrajectoryControllerHandle(
+  const rclcpp::Node::SharedPtr& node,
+  const std::string& name,
+  const std::string& action_ns)
+: ActionBasedControllerHandle<control_msgs::action::FollowJointTrajectory>(
+    node, name, action_ns, "moveit.simple_controller_manager.follow_joint_trajectory_controller_handle")
+{
+  goal_template_.path_tolerance = configure_tolerance_from_params(name_ + ".path_tolerance");
+  goal_template_.path_tolerance = configure_tolerance_from_params(name_ + ".goal_tolerance");
+  goal_tamplete_.goal_time_tolerance = node.declare_parameter(name_ + ".goal_time_tolerance", 0.);
 }
 
 void FollowJointTrajectoryControllerHandle::controllerDoneCallback(

@@ -52,21 +52,16 @@ class FollowJointTrajectoryControllerHandle
   : public ActionBasedControllerHandle<control_msgs::action::FollowJointTrajectory>
 {
 public:
-  FollowJointTrajectoryControllerHandle(const rclcpp::Node::SharedPtr& node, const std::string& name,
-                                        const std::string& action_ns)
-    : ActionBasedControllerHandle<control_msgs::action::FollowJointTrajectory>(
-          node, name, action_ns, "moveit.simple_controller_manager.follow_joint_trajectory_controller_handle")
-  {
-  }
+  FollowJointTrajectoryControllerHandle(
+    const rclcpp::Node::SharedPtr& node,
+    const std::string& name,
+    const std::string& action_ns);
 
   bool sendTrajectory(const moveit_msgs::msg::RobotTrajectory& trajectory) override;
 
-  // TODO(JafarAbdi): Revise parameter lookup
-  // void configure(XmlRpc::XmlRpcValue& config) override;
-
 protected:
-  static control_msgs::msg::JointTolerance& getTolerance(std::vector<control_msgs::msg::JointTolerance>& tolerances,
-                                                         const std::string& name);
+  std::vector<control_msgs::msg::JointTolerance>
+  configure_tolerance_from_params(const std::string & parameter_prefix);
 
   void controllerDoneCallback(
       const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult& wrapped_result)
