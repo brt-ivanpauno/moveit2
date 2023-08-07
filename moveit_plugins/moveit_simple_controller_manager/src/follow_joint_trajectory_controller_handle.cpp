@@ -181,7 +181,8 @@ FollowJointTrajectoryControllerHandle::FollowJointTrajectoryControllerHandle(
 {
   goal_template_.path_tolerance = configure_tolerance_from_params(name_ + ".path_tolerance");
   goal_template_.path_tolerance = configure_tolerance_from_params(name_ + ".goal_tolerance");
-  goal_template_.goal_time_tolerance = node->declare_parameter(name_ + ".goal_time_tolerance", 0.);
+  goal_template_.goal_time_tolerance = rclcpp::Duration{
+    node->declare_parameter(name_ + ".goal_time_tolerance", 0.)};
 }
 
 void FollowJointTrajectoryControllerHandle::controllerDoneCallback(
