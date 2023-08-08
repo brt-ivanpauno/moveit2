@@ -199,7 +199,7 @@ void FollowJointTrajectoryControllerHandle::configureFromParamaters()
   node_->get_parameter_or(
       "moveit_simple_controller_manager." + name_ + ".goal_time_tolerance",
       goal_time_tolerance,
-      0.)
+      0.);
   goal_template_.goal_time_tolerance = rclcpp::Duration::from_seconds(goal_time_tolerance);
 }
 
