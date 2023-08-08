@@ -115,12 +115,13 @@ const char* errorCodeToMessage(int error_code)
 
 
 std::vector<control_msgs::msg::JointTolerance>
-FollowJointTrajectoryControllerHandle::configure_tolerance_from_params(
+FollowJointTrajectoryControllerHandle::configureToleranceFromParams(
   const std::string & parameter_prefix)
 {
   RCLCPP_INFO_STREAM(LOGGER, "loading tolerances, N joints: " << joints_.size());
   std::vector<control_msgs::msg::JointTolerance> tolerances;
-  auto positions = node_->declare_parameter<std::vector<double>>(
+  RCLCPP_INFO_STREAM(LOGGER, "declaring: " << parameter_prefix + ".position");
+  auto positions = node_->declare_parameter(
     parameter_prefix + ".position",
     std::vector<double>{});
   RCLCPP_INFO_STREAM(LOGGER, "N position tolerances: " << positions.size());
@@ -130,7 +131,7 @@ FollowJointTrajectoryControllerHandle::configure_tolerance_from_params(
       "Parameter '" << parameter_prefix << ".position' should have one value for each joint."
       " Number of joints " << joints_.size());
   }
-  auto velocities = node_->declare_parameter<std::vector<double>>(
+  auto velocities = node_->declare_parameter(
     parameter_prefix + ".velocity",
     std::vector<double>{});
   RCLCPP_INFO_STREAM(LOGGER, "N velocity tolerances: " << velocities.size());
@@ -140,7 +141,7 @@ FollowJointTrajectoryControllerHandle::configure_tolerance_from_params(
       "Parameter '" << parameter_prefix << ".velocity' should have one value for each joint."
       " Number of joints " << joints_.size());
   }
-  auto accelerations = node_->declare_parameter<std::vector<double>>(
+  auto accelerations = node_->declare_parameter(
     parameter_prefix + ".acceleration",
     std::vector<double>{});
   RCLCPP_INFO_STREAM(LOGGER, "N acceleration tolerances: " << accelerations.size());
@@ -182,6 +183,17 @@ FollowJointTrajectoryControllerHandle::configure_tolerance_from_params(
   return tolerances;
 }
 
+void configureFromParamaters()
+{
+  goal_template_.path_tolerance = configureToleranceFromParams(
+    "moveit_simple_controller_manager." + name_ + ".path_tolerance");
+  goal_template_.path_tolerance = configureToleranceFromParams(
+    "moveit_simple_controller_manager." + name_ + ".goal_tolerance");
+  goal_template_.goal_time_tolerance = rclcpp::Duration::from_seconds(
+    node->declare_parameter(
+      "moveit_simple_controller_manager." + name_ + ".goal_time_tolerance", 0.));
+}
+
 FollowJointTrajectoryControllerHandle::FollowJointTrajectoryControllerHandle(
   const rclcpp::Node::SharedPtr& node,
   const std::string& name,
@@ -189,12 +201,6 @@ FollowJointTrajectoryControllerHandle::FollowJointTrajectoryControllerHandle(
 : ActionBasedControllerHandle<control_msgs::action::FollowJointTrajectory>(
     node, name, action_ns, "moveit.simple_controller_manager.follow_joint_trajectory_controller_handle")
 {
-  goal_template_.path_tolerance = configure_tolerance_from_params(
-    "moveit_simple_controller_manager." + name_ + ".path_tolerance");
-  goal_template_.path_tolerance = configure_tolerance_from_params(
-    "moveit_simple_controller_manager." + name_ + ".goal_tolerance");
-  goal_template_.goal_time_tolerance = rclcpp::Duration::from_seconds(
-    node->declare_parameter("moveit_simple_controller_manager." + name_ + ".goal_time_tolerance", 0.));
 }
 
 void FollowJointTrajectoryControllerHandle::controllerDoneCallback(

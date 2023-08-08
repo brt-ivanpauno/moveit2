@@ -202,6 +202,10 @@ public:
         /* add list of joints, used by controller manager and MoveIt */
         for (const std::string& controller_joint : controller_joints)
           new_handle->addJoint(controller_joint);
+        if (type == "FollowJointTrajectory")
+        {
+          static_cast<GripperControllerHandle*>(new_handle.get())->configureFromParamaters();
+        }
       }
       catch (...)
       {

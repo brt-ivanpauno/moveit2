@@ -59,9 +59,11 @@ public:
 
   bool sendTrajectory(const moveit_msgs::msg::RobotTrajectory& trajectory) override;
 
+  void configureFromParamaters();
+
 protected:
   std::vector<control_msgs::msg::JointTolerance>
-  configure_tolerance_from_params(const std::string & parameter_prefix);
+  configureToleranceFromParams(const std::string & parameter_prefix);
 
   void controllerDoneCallback(
       const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult& wrapped_result)
