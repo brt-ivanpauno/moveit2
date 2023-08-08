@@ -183,14 +183,14 @@ FollowJointTrajectoryControllerHandle::configureToleranceFromParams(
   return tolerances;
 }
 
-void configureFromParamaters()
+void FollowJointTrajectoryControllerHandle::configureFromParamaters()
 {
   goal_template_.path_tolerance = configureToleranceFromParams(
     "moveit_simple_controller_manager." + name_ + ".path_tolerance");
   goal_template_.path_tolerance = configureToleranceFromParams(
     "moveit_simple_controller_manager." + name_ + ".goal_tolerance");
   goal_template_.goal_time_tolerance = rclcpp::Duration::from_seconds(
-    node->declare_parameter(
+    node_->declare_parameter(
       "moveit_simple_controller_manager." + name_ + ".goal_time_tolerance", 0.));
 }
 

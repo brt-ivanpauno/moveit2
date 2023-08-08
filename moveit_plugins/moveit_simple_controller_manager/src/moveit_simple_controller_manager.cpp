@@ -204,7 +204,7 @@ public:
           new_handle->addJoint(controller_joint);
         if (type == "FollowJointTrajectory")
         {
-          static_cast<GripperControllerHandle*>(new_handle.get())->configureFromParamaters();
+          static_cast<FollowJointTrajectoryControllerHandle*>(new_handle.get())->configureFromParamaters();
         }
       }
       catch (...)
