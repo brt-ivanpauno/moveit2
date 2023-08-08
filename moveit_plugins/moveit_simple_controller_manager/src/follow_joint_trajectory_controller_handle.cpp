@@ -179,8 +179,10 @@ FollowJointTrajectoryControllerHandle::FollowJointTrajectoryControllerHandle(
 : ActionBasedControllerHandle<control_msgs::action::FollowJointTrajectory>(
     node, name, action_ns, "moveit.simple_controller_manager.follow_joint_trajectory_controller_handle")
 {
-  goal_template_.path_tolerance = configure_tolerance_from_params(name_ + ".path_tolerance");
-  goal_template_.path_tolerance = configure_tolerance_from_params(name_ + ".goal_tolerance");
+  goal_template_.path_tolerance = configure_tolerance_from_params(
+    "moveit_simple_controller_manager." + name_ + ".path_tolerance");
+  goal_template_.path_tolerance = configure_tolerance_from_params(
+    "moveit_simple_controller_manager." + name_ + ".goal_tolerance");
   goal_template_.goal_time_tolerance = rclcpp::Duration::from_seconds(
     node->declare_parameter("moveit_simple_controller_manager." + name_ + ".goal_time_tolerance", 0.));
 }
