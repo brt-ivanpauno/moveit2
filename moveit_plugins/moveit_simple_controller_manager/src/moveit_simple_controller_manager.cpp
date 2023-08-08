@@ -207,6 +207,10 @@ public:
           static_cast<FollowJointTrajectoryControllerHandle*>(new_handle.get())->configureFromParamaters();
         }
       }
+      catch (const std::exception & exc)
+      {
+        RCLCPP_ERROR_STREAM(LOGGER, "Caught unknown exception while parsing controller information: " << exc.what());
+      }
       catch (...)
       {
         RCLCPP_ERROR_STREAM(LOGGER, "Caught unknown exception while parsing controller information");
