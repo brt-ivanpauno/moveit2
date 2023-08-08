@@ -118,10 +118,12 @@ std::vector<control_msgs::msg::JointTolerance>
 FollowJointTrajectoryControllerHandle::configure_tolerance_from_params(
   const std::string & parameter_prefix)
 {
+  RCLCPP_INFO_STREAM(LOGGER, "loading tolerances, N joints: " << joints_.size());
   std::vector<control_msgs::msg::JointTolerance> tolerances;
   auto positions = node_->declare_parameter<std::vector<double>>(
     parameter_prefix + ".position",
     std::vector<double>{});
+  RCLCPP_INFO_STREAM(LOGGER, "N position tolerances: " << positions.size());
   if (positions.size() != 0 && positions.size() != joints_.size()) {
     RCLCPP_WARN_STREAM(
       LOGGER,
@@ -131,6 +133,7 @@ FollowJointTrajectoryControllerHandle::configure_tolerance_from_params(
   auto velocities = node_->declare_parameter<std::vector<double>>(
     parameter_prefix + ".velocity",
     std::vector<double>{});
+  RCLCPP_INFO_STREAM(LOGGER, "N velocity tolerances: " << velocities.size());
   if (velocities.size() != 0 && velocities.size() != joints_.size()) {
     RCLCPP_WARN_STREAM(
       LOGGER,
@@ -140,6 +143,7 @@ FollowJointTrajectoryControllerHandle::configure_tolerance_from_params(
   auto accelerations = node_->declare_parameter<std::vector<double>>(
     parameter_prefix + ".acceleration",
     std::vector<double>{});
+  RCLCPP_INFO_STREAM(LOGGER, "N acceleration tolerances: " << accelerations.size());
   if (accelerations.size() != 0 && accelerations.size() != joints_.size()) {
     RCLCPP_WARN_STREAM(
       LOGGER,
@@ -147,26 +151,32 @@ FollowJointTrajectoryControllerHandle::configure_tolerance_from_params(
       " Number of joints " << joints_.size());
   }
   if (positions.size() == 0 && velocities.size() == 0 && accelerations.size() == 0) {
+    RCLCPP_INFO(LOGGER, "Using default tolerances");
     // nothing specified, default tolerances
     return tolerances;
   }
+  RCLCPP_INFO(LOGGER, "Loading tolerances from parameters");
   size_t i = 0;
   bool use_position_tol = positions.size() == joints_.size();
-  bool use_velocity_tol = positions.size() == joints_.size();
-  bool use_acc_tol = positions.size() == joints_.size();
+  bool use_velocity_tol = velocities.size() == joints_.size();
+  bool use_acc_tol = accelerations.size() == joints_.size();
   for (const auto & joint : joints_) {
     control_msgs::msg::JointTolerance tol;
     tol.name = joint;
-    tolerances.emplace_back(tol);
+    RCLCPP_INFO_STREAM(LOGGER, "Joint '" << joint << "' tolerances:");
     if (use_position_tol) {
       tol.position = positions[i];
+      RCLCPP_INFO_STREAM(LOGGER, "  position: " << tol.position);
     }
     if (use_velocity_tol) {
       tol.velocity = velocities[i];
+      RCLCPP_INFO_STREAM(LOGGER, "  velocity: " << tol.velocity);
     }
     if (use_acc_tol) {
       tol.acceleration = accelerations[i];
+      RCLCPP_INFO_STREAM(LOGGER, "  acceleration: " << tol.acceleration);
     }
+    tolerances.emplace_back(tol);
     ++i;
   }
   return tolerances;
